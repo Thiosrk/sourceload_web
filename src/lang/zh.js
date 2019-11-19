@@ -13,6 +13,9 @@ export default{
       directivePermission: '指令权限',
       Example: '示例',
       Form:'表格',
+      // DSManager:'数据源管理',
+      // AddDS:'添加数据源',
+      // DSList:'数据源列表',
     },
     login:{
         title: '系统登录',
