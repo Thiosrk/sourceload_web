@@ -13,10 +13,18 @@ export default{
       directivePermission: '指令权限',
       Example: '示例',
       Form:'表格',
-      // DSManager:'数据源管理',
-      // AddDS:'添加数据源',
-      // DSList:'数据源列表',
+      DSManager:'数据源管理',
+      AddDS:'配置',
+      DSList:'列表',
+      TaskManager:'任务管理',
+      TaskList:'列表',
+      AddTask:'配置',
+      LogManager:'日志管理',
+      LogList:'列表',
+      LogDashboard:'统计',
+
     },
+
     login:{
         title: '系统登录',
         logIn: '登录',
