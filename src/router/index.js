@@ -65,7 +65,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'DSList',
-        component: () => import('@/views/table/index'),
+        component: () => import('@/views/table/complex-table'),
         meta: { title: 'DSList', icon: 'list' }
       },
       {
@@ -87,7 +87,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'TaskList',
-        component: () => import('@/views/table/index'),
+        component: () => import('@/views/table/complex-table'),
         meta: { title: 'TaskList', icon: 'list' }
       },
       {
@@ -109,7 +109,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'LogList',
-        component: () => import('@/views/table/index'),
+        component: () => import('@/views/table/complex-table'),
         meta: { title: 'LogList', icon: 'list' }
       },
       {
