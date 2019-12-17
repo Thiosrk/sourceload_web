@@ -65,7 +65,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'DSList',
-        component: () => import('@/views/table/complex-table'),
+        component: () => import('@/views/table/DBSource-table'),
         meta: { title: 'DSList', icon: 'list' }
       },
       {
