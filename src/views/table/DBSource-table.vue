@@ -1,20 +1,22 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.title" placeholder="Title" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      <el-select v-model="listQuery.connState" placeholder="连接状态" clearable style="width: 130px" class="filter-item">
-        <el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
-      </el-select>
+      <el-input v-model="listQuery.name" placeholder="数据源名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="listQuery.dbType" placeholder="数据库类型" clearable class="filter-item" style="width: 130px">
         <el-option v-for="item in dbTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
       </el-select>
-      <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleFilter">
-        <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
+      <el-select v-model="listQuery.connState" placeholder="连接状态" clearable style="width: 130px" class="filter-item">
+        <el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />
       </el-select>
+      <el-input v-model="listQuery.creator" placeholder="创建者" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+
+      <!--<el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleFilter">-->
+        <!--<el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />-->
+      <!--</el-select>-->
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         Search
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit"  @click="handleCreate">
         Add
       </el-button>
       <!--<el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">-->
@@ -91,7 +93,7 @@
           <el-button size="mini" type="primary" @click="handleUpdate(row)">
             修改
           </el-button>
-          <el-button size="mini" type="danger" @click="handleModifyStatus(row,'deleted')">
+          <el-button size="mini" type="danger" @click="handleDelete(row)">
             删除
           </el-button>
         </template>
@@ -101,49 +103,72 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <el-form-item label="Type" prop="type">
-          <el-select v-model="temp.type" class="filter-item" placeholder="Please select">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
+        <el-form-item v-if="dialogStatus==='update'" label="数据源ID" prop="id">
+          <!--<el-input v-model="temp.id" :disabled="true"/>-->
+          <span>{{ temp.id }}</span>
+        </el-form-item>
+        <el-form-item label="数据源名称" prop="name">
+          <el-input v-model="temp.name" />
+        </el-form-item>
+        <el-form-item label="数据库类型" prop="dbType">
+          <el-select v-model="temp.dbType" class="filter-item" placeholder="Please select">
             <el-option v-for="item in dbTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Date" prop="timestamp">
-          <el-date-picker v-model="temp.timestamp" type="datetime" placeholder="Please pick a date" />
+        <el-form-item label="数据库链接地址" prop="url" >
+          <el-input v-model="temp.url" />
         </el-form-item>
-        <el-form-item label="Title" prop="title">
-          <el-input v-model="temp.title" />
+        <el-form-item label="数据库用户名" prop="username">
+          <el-input v-model="temp.username" />
         </el-form-item>
-        <el-form-item label="Status">
-          <el-select v-model="temp.status" class="filter-item" placeholder="Please select">
-            <el-option v-for="item in connStateOptions" :key="item" :label="item" :value="item" />
-          </el-select>
+        <el-form-item label="数据库密码" prop="password">
+          <el-input v-model="temp.password" />
         </el-form-item>
-        <el-form-item label="Imp">
-          <el-rate v-model="temp.importance" :colors="['#99A9BF', '#F7BA2A', '#FF9900']" :max="3" style="margin-top:8px;" />
+        <el-form-item label="连接状态">
+          <!--<el-select v-model="temp.connState" class="filter-item" placeholder="Please select" :disabled="true">-->
+            <!--<el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name" :value="item.key" />-->
+          <!--</el-select>-->
+          <el-tag :type="temp.connState | connStateTypeFilter">
+            {{ temp.connState | connStateFilter }}
+          </el-tag>
         </el-form-item>
-        <el-form-item label="Remark">
-          <el-input v-model="temp.remark" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="Please input" />
+        <el-form-item label="创建时间" prop="Date">
+          <!--<el-date-picker v-model="temp.createTime" type="datetime" placeholder="Please pick a date" :disabled="true"/>-->
+          <span >{{ temp.createTime | parseTime('{y}-{m}-{d} {h}:{i}')}}</span>
         </el-form-item>
+        <el-form-item label="创建者" prop="creator">
+          <!--<el-input v-model="temp.creator" :disabled="true"/>-->
+          <span>{{ temp.creator }}</span>
+        </el-form-item>
+
+
+        <!--<el-form-item label="Imp">-->
+          <!--<el-rate v-model="temp.importance" :colors="['#99A9BF', '#F7BA2A', '#FF9900']" :max="3" style="margin-top:8px;" />-->
+        <!--</el-form-item>-->
+        <!--<el-form-item label="Remark">-->
+          <!--<el-input v-model="temp.remark" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="Please input" />-->
+        <!--</el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
-          Cancel
+          取消
         </el-button>
         <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          Confirm
+          确定
         </el-button>
       </div>
     </el-dialog>
 
-    <el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">
-      <el-table :data="pvData" border fit highlight-current-row style="width: 100%">
-        <el-table-column prop="key" label="Channel" />
-        <el-table-column prop="pv" label="Pv" />
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogPvVisible = false">Confirm</el-button>
-      </span>
-    </el-dialog>
+    <!--<el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">-->
+      <!--<el-table :data="pvData" border fit highlight-current-row style="width: 100%">-->
+        <!--<el-table-column prop="key" label="Channel" />-->
+        <!--<el-table-column prop="pv" label="Pv" />-->
+      <!--</el-table>-->
+      <!--<span slot="footer" class="dialog-footer">-->
+        <!--<el-button type="primary" @click="dialogPvVisible = false">Confirm</el-button>-->
+      <!--</span>-->
+    <!--</el-dialog>-->
   </div>
 </template>
 
@@ -168,6 +193,7 @@ const dbTypeKeyValue = dbTypeOptions.reduce((acc, cur) => {
 const connStateOptions = [
   { key: 'success', display_name: '正常' },
   { key: 'fail', display_name: '异常' },
+  { key: 'undo', display_name: '未测试' },
 ];
 
 const connStateKeyValue = connStateOptions.reduce((acc, cur) => {
@@ -185,7 +211,8 @@ export default {
     connStateTypeFilter(state) {
       const statusMap = {
         success: 'success',
-        fail: 'danger'
+        fail: 'danger',
+        undo: 'info'
       };
       return statusMap[state]
     },
@@ -207,6 +234,7 @@ export default {
         page: 1,
         limit: 20,
         connState: undefined,
+        creator: undefined,
         name: undefined,
         dbType: undefined,
         sort: '+id'
@@ -231,14 +259,15 @@ export default {
       dialogStatus: '',
       textMap: {
         update: '修改',
-        create: '新建'
+        create: '新建数据源'
       },
-      dialogPvVisible: false,
-      pvData: [],
+      // dialogPvVisible: false,
+      // pvData: [],
       rules: {
-        type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        title: [{ required: true, message: 'title is required', trigger: 'blur' }]
+        name: [{ required: true, message: 'name is required', trigger: 'blur' }],
+        createTime: [{ type: 'date', required: true, message: 'createTime is required', trigger: 'change' }],
+        username: [{ required: true, message: 'username is required', trigger: 'blur' }],
+        password: [{ required: true, message: 'password is required', trigger: 'blur' }]
       },
       downloadLoading: false
     }
@@ -248,11 +277,12 @@ export default {
   },
   methods: {
     getList() {
+      // console.log(process.env.NODE_ENV)
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.total
-
+        // console.log(this.list.length)
         // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
@@ -289,13 +319,13 @@ export default {
         id: undefined,
         createTime: new Date(),
         name: '',
-        dbType: '',
-        creator:'',
+        dbType: 'Mysql',
+        creator:this.$store.getters.name,
         driver:'',
         url:'',
         username:'',
         password:'',
-        connState: ''
+        connState: 'undo'
       }
     },
     handleCreate() {
@@ -305,6 +335,7 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+      // this.$router.push({ path: '/dataSource/add' })
     },
     createData() {
       this.$refs['dataForm'].validate((valid) => {
@@ -326,7 +357,7 @@ export default {
     },
     handleUpdate(row) {
       this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
+      // this.temp.createTime = new Date(this.temp.createTime)
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -337,7 +368,7 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
-          tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
+          // tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
           updateArticle(tempData).then(() => {
             for (const v of this.list) {
               if (v.id === this.temp.id) {
@@ -358,6 +389,7 @@ export default {
       })
     },
     handleDelete(row) {
+
       this.$notify({
         title: 'Success',
         message: 'Delete Successfully',
@@ -366,13 +398,14 @@ export default {
       })
       const index = this.list.indexOf(row)
       this.list.splice(index, 1)
+      // console.log(this.listQuery.length)
     },
-    handleFetchPv(pv) {
-      fetchPv(pv).then(response => {
-        this.pvData = response.data.pvData
-        this.dialogPvVisible = true
-      })
-    },
+    // handleFetchPv(pv) {
+    //   fetchPv(pv).then(response => {
+    //     this.pvData = response.data.pvData
+    //     this.dialogPvVisible = true
+    //   })
+    // },
     handleDownload() {
       this.downloadLoading = true
       import('@/vendor/Export2Excel').then(excel => {
