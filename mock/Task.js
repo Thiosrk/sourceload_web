@@ -10,16 +10,24 @@ for (let i = 0; i < count; i++) {
   List.push(Mock.mock({
     id: '@increment',
     createTime: '@datetime',
+    updateTime: '@datetime',
     creator: '@first',
-    name: '@title(5, 10)',
-    driver: 'mock data',
-    url: 'mock data',
-    username: 'mock data',
-    password: 'mock data',
-    'dbType|1': ['Oracle', 'Mysql'],
-    'connState|1': ['success', 'fail'],
+    tableName: '@title(5, 10)',
+    totalFromSource: 0,
+    totalInLocal: 0,
+    timestampField: 'mock data',
+    updateTimestampValue: '@datetime',
+    timeInterval: 0,
+    systemId: 'mock data',
+    requestUrl: 'mock data',
+    startPage: 1,
+    pageSize: 1000,
+    tableSequence: 0,
+    dataSource: 'mock data',
+    'taskState|1': [ 0, 1, 2, 3, 4 ],
+    'taskType|1': [ 0, 1, 2 ],
+    // 'connState|1': ['success', 'fail'],
     comment_disabled: true,
-    pageviews: '@integer(300, 5000)',
     // image_uri,
     // platforms: ['a-platform']
   }))
@@ -27,15 +35,15 @@ for (let i = 0; i < count; i++) {
 
 export default [
   {
-    url: '/api/dataSource/list',
+    url: '/api/task/list',
     type: 'get',
     response: config => {
-      const { connState, dbType, name, page = 1, limit = 20, sort } = config.query
+      const { taskType, taskState, tableName, page = 1, limit = 20, sort } = config.query
 
       let mockList = List.filter(item => {
-        if (dbType && item.dbType !== dbType) return false
-        if (connState && item.connState !== connState) return false
-        if (name && item.name.indexOf(name) < 0) return false
+        if (taskType && item.taskType !== taskType) return false
+        if (taskState && item.taskState !== taskState) return false
+        if (tableName && item.tableName.indexOf(tableName) < 0) return false
         return true
       })
 

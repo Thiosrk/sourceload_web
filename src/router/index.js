@@ -87,7 +87,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'TaskList',
-        component: () => import('@/views/table/complex-table'),
+        component: () => import('@/views/table/Task-table'),
         meta: { title: 'TaskList', icon: 'list' }
       },
       {
@@ -95,6 +95,12 @@ export const constantRoutes = [
         name: 'AddTask',
         component: () => import('@/views/form/index'),
         meta: { title: 'AddTask', icon: 'form' }
+      },
+      {
+        path: 'uploadTable',
+        name: 'UploadExcel',
+        component: () => import('@/views/upload/upload-excel'),
+        meta: { title: 'UploadExcel', icon: 'excel'}
       }
     ]
   },
@@ -120,6 +126,7 @@ export const constantRoutes = [
       }
     ]
   },
+
 
   {
     path: '/form',

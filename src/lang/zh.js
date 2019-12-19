@@ -22,6 +22,7 @@ export default{
       LogManager:'日志管理',
       LogList:'列表',
       LogDashboard:'统计',
+      UploadExcel:'表结构上传'
 
     },
 

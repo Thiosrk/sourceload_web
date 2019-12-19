@@ -1,15 +1,16 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.name" placeholder="数据源名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      <el-select v-model="listQuery.dbType" placeholder="数据库类型" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="item in dbTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-input v-model="listQuery.tableName" placeholder="任务表名" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-select v-model="listQuery.taskType" placeholder="任务类型" clearable class="filter-item" style="width: 130px">
+        <el-option v-for="item in taskTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
         <!--+'('+item.key+')'-->
       </el-select>
-      <el-select v-model="listQuery.connState" placeholder="连接状态" clearable style="width: 130px" class="filter-item">
-        <el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+      <el-select v-model="listQuery.taskState" placeholder="任务状态" clearable style="width: 130px" class="filter-item">
+        <el-option v-for="item in taskStateOptions" :key="item.key" :label="item.display_name" :value="item.key" />
       </el-select>
-      <el-input v-model="listQuery.creator" placeholder="创建者" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.dataSource" placeholder="数据源" style="width: 150px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.creator" placeholder="创建者" style="width: 150px;" class="filter-item" @keyup.enter.native="handleFilter" />
 
       <!--<el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleFilter">-->
         <!--<el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />-->
@@ -43,44 +44,46 @@
           <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="数据源名称" min-width="150px" align="center">
+      <el-table-column label="任务表名" min-width="150px" align="center">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.name+" " }}</span>
+          <span class="link-type" @click="handleUpdate(row)">{{ row.tableName }}</span>
         </template>
 
       </el-table-column>
-      <el-table-column label="数据库类型"width="100px" align="center">
+      <el-table-column label="任务类型"width="100px" align="center">
         <template slot-scope="scope">
 
           <!--<span>{{ scope.row.timestamp | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>-->
-          <el-tag>{{ scope.row.dbType | dbTypeFilter }}</el-tag>
+          <el-tag>{{ scope.row.taskType | taskTypeFilter }}</el-tag>
 
         </template>
       </el-table-column>
-      <el-table-column label="连接地址" width="200px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.url }}</span>
+
+      <el-table-column label="任务状态" class-name="status-col" align="center" width="95">
+
+        <template slot-scope="{row}">
+          <el-tag :type="row.taskState | taskStateTypeFilter">
+            {{ row.taskState | taskStateFilter }}
+          </el-tag>
         </template>
       </el-table-column>
+      <!--<el-table-column label="连接地址" width="200px" align="center">-->
+        <!--<template slot-scope="scope">-->
+          <!--<span>{{ scope.row.url }}</span>-->
+        <!--</template>-->
+      <!--</el-table-column>-->
       <!--<el-table-column v-if="showReviewer" label="用户名" width="80px" align="center">-->
         <!--<template slot-scope="scope">-->
           <!--<span style="color:red;">{{ scope.row.reviewer }}</span>-->
         <!--</template>-->
       <!--</el-table-column>-->
-      <el-table-column label="用户名" width="100px" align="center">
+      <el-table-column label="数据源" width="100px" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.username }}</span>
+          <span>{{ scope.row.dataSource }}</span>
           <!--<svg-icon v-for="n in +scope.row.importance" :key="n" icon-class="star" class="meta-item__icon" />-->
         </template>
       </el-table-column>
-      <el-table-column label="连接状态" class-name="status-col" align="center" width="95">
 
-        <template slot-scope="{row}">
-          <el-tag :type="row.connState | connStateTypeFilter">
-            {{ row.connState | connStateFilter }}
-          </el-tag>
-        </template>
-      </el-table-column>
       <el-table-column label="创建者"  width="100" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.creator }}</span>
@@ -105,43 +108,77 @@
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item v-if="dialogStatus==='update'" label="数据源ID" prop="id">
+        <el-form-item v-if="dialogStatus==='update'" label="任务ID：" prop="id">
           <!--<el-input v-model="temp.id" :disabled="true"/>-->
           <span>{{ temp.id }}</span>
         </el-form-item>
-        <el-form-item label="数据源名称" prop="name">
-          <el-input v-model="temp.name" />
+        <el-form-item label="任务名称：" prop="tableName">
+          <el-input v-model="temp.tableName" />
         </el-form-item>
-        <el-form-item label="数据库类型" prop="dbType">
-          <el-select v-model="temp.dbType" class="filter-item" placeholder="Please select">
-            <el-option v-for="item in dbTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+        <el-form-item label="任务类型：" prop="taskType">
+          <el-select v-model="temp.taskType" class="filter-item" placeholder="Please select">
+            <el-option v-for="item in taskTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
           </el-select>
         </el-form-item>
-        <el-form-item label="数据库链接地址" prop="url" >
-          <el-input v-model="temp.url" />
-        </el-form-item>
-        <el-form-item label="数据库用户名" prop="username">
-          <el-input v-model="temp.username" />
-        </el-form-item>
-        <el-form-item label="数据库密码" prop="password">
-          <el-input v-model="temp.password" />
-        </el-form-item>
-        <el-form-item label="连接状态">
+        <el-form-item label="任务状态：">
           <!--<el-select v-model="temp.connState" class="filter-item" placeholder="Please select" :disabled="true">-->
-            <!--<el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name" :value="item.key" />-->
+          <!--<el-option v-for="item in connStateOptions" :key="item.key" :label="item.display_name" :value="item.key" />-->
           <!--</el-select>-->
-          <el-tag :type="temp.connState | connStateTypeFilter">
-            {{ temp.connState | connStateFilter }}
+          <el-tag :type="temp.taskState | taskStateTypeFilter">
+            {{ temp.taskState | taskStateFilter }}
           </el-tag>
         </el-form-item>
-        <el-form-item label="创建时间" prop="Date">
-          <!--<el-date-picker v-model="temp.createTime" type="datetime" placeholder="Please pick a date" :disabled="true"/>-->
-          <span >{{ temp.createTime | parseTime('{y}-{m}-{d} {h}:{i}')}}</span>
+        <el-form-item label="数据源：" prop="dataSource" >
+          <el-input v-model="temp.dataSource" />
         </el-form-item>
-        <el-form-item label="创建者" prop="creator">
+        <el-form-item label="创建者：" prop="creator">
           <!--<el-input v-model="temp.creator" :disabled="true"/>-->
           <span>{{ temp.creator }}</span>
         </el-form-item>
+        <el-form-item label="创建时间：" prop="Date">
+          <!--<el-date-picker v-model="temp.createTime" type="datetime" placeholder="Please pick a date" :disabled="true"/>-->
+          <span >{{ temp.createTime | parseTime('{y}-{m}-{d} {h}:{i}')}}</span>
+        </el-form-item>
+        <el-form-item label="数据总量：" prop="totalFromSource">
+          <!--<el-input v-model="temp.totalFromSource" />-->
+          <span>{{ temp.totalFromSource }}</span>
+        </el-form-item>
+        <el-form-item label="本地数据量：" prop="totalInLocal">
+          <!--<el-input v-model="temp.totalInLocal" />-->
+          <span>{{ temp.totalInLocal }}</span>
+        </el-form-item>
+        <el-form-item label="更新时间：" prop="Date">
+          <!--<el-date-picker v-model="temp.createTime" type="datetime" placeholder="Please pick a date" :disabled="true"/>-->
+          <span >{{ temp.updateTime | parseTime('{y}-{m}-{d} {h}:{i}')}}</span>
+        </el-form-item>
+        <el-form-item label="时间戳字段：" prop="timestampField">
+          <el-input v-model="temp.timestampField" />
+        </el-form-item>
+        <el-form-item label="最新时间戳：" prop="updateTimestampValue">
+        <!--<el-input v-model="temp.updateTimestampValue" />-->
+          <span>{{ temp.updateTimestampValue }}</span>
+        </el-form-item>
+        <el-form-item label="抽取时间间隔：" prop="timeInterval">
+          <el-input v-model="temp.timeInterval" style="width: 250px;margin-right: 10px" />
+          <label>天</label>
+        </el-form-item>
+        <el-form-item label="任务调用id：" prop="systemId">
+          <el-input v-model="temp.systemId" />
+        </el-form-item>
+        <el-form-item label="请求地址：" prop="requestUrl">
+          <el-input v-model="temp.requestUrl" />
+        </el-form-item>
+        <el-form-item label="开始页数：" prop="startPage">
+          <el-input v-model="temp.startPage" />
+        </el-form-item>
+        <el-form-item label="每页数据量：" prop="pageSize">
+          <el-input v-model="temp.pageSize" />
+        </el-form-item>
+        <el-form-item label="主键增量：" prop="tableSequence">
+          <span>{{ temp.tableSequence }}</span>
+        </el-form-item>
+
+
 
 
         <!--<el-form-item label="Imp">-->
@@ -175,54 +212,59 @@
 
 <script>
 import { fetchPv, createArticle, updateArticle } from '@/api/article'
-import { fetchList } from "@/api/DBSource";
+import { fetchList } from "@/api/Task";
 import waves from '@/directive/waves' // waves directive
 // import { parse_Time } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
-const dbTypeOptions = [
-  { key: 'Mysql', display_name: 'Mysql' },
-  { key: 'Oracle', display_name: 'Oracle' },
+const taskTypeOptions = [
+  { key: 0, display_name: '全量任务' },
+  { key: 1, display_name: '定时任务' },
+  { key: 2, display_name: '定量任务' }
 ];
 
 // arr to obj, such as { CN : "China", US : "USA" }
-const dbTypeKeyValue = dbTypeOptions.reduce((acc, cur) => {
+const taskTypeKeyValue = taskTypeOptions.reduce((acc, cur) => {
   acc[cur.key] = cur.display_name;
   return acc
 }, {});
 
-const connStateOptions = [
-  { key: 'success', display_name: '正常' },
-  { key: 'fail', display_name: '异常' },
-  { key: 'undo', display_name: '未测试' },
+const taskStateOptions = [
+  { key: 0, display_name: '正常结束' },
+  { key: 1, display_name: '正在运行' },
+  { key: 2, display_name: '异常' },
+  { key: 3, display_name: '手动停止' },
+  { key: 4, display_name: '未运行' }
 ];
 
-const connStateKeyValue = connStateOptions.reduce((acc, cur) => {
+const taskStateKeyValue = taskStateOptions.reduce((acc, cur) => {
   acc[cur.key] = cur.display_name;
   return acc
 }, {});
 
 
 export default {
-  name: 'DBSource-table',
+  name: 'Task-table',
   components: { Pagination },
   directives: { waves },
   filters: {
 
-    connStateTypeFilter(state) {
+    taskStateTypeFilter(state) {
       const statusMap = {
-        success: 'success',
-        fail: 'danger',
-        undo: 'info'
+        0: 'primary',
+        1: 'success',
+        2: 'danger',
+        3: 'warning',
+        4: 'info'
       };
       return statusMap[state]
     },
 
-    connStateFilter(state) {
-      return connStateKeyValue[state]
+    taskStateFilter(state) {
+      return taskStateKeyValue[state]
     },
-    dbTypeFilter(dbType) {
-      return dbTypeKeyValue[dbType]
+    taskTypeFilter(taskType) {
+      return taskTypeKeyValue[taskType]
     }
   },
   data() {
@@ -234,42 +276,53 @@ export default {
       listQuery: {
         page: 1,
         limit: 20,
-        connState: undefined,
+        taskState: undefined,
         creator: undefined,
-        name: undefined,
-        dbType: undefined,
+        tableName: undefined,
+        taskType: undefined,
+        dataSource: undefined,
         sort: '+id'
       },
-      dbTypeOptions,
-      connStateOptions,
+      taskTypeOptions,
+      taskStateOptions,
       sortOptions: [{ label: 'ID Ascending', key: '+id' }, { label: 'ID Descending', key: '-id' }],
       // showReviewer: false,
       temp: {
         id: undefined,
-        createTime: new Date(),
-        name: '',
-        dbType: '',
+        tableName: '',
+        taskType: '',
+        taskState: '',
+        dataSource:'',
         creator:'',
-        driver:'',
-        url:'',
-        username:'',
-        password:'',
-        connState: ''
+        createTime: new Date(),
+        updateTime: new Date(),
+        totalFromSource: '',
+        totalInLocal: '',
+        timestampField: '',
+        updateTimestampValue: '',
+        timeInterval: '',
+        systemId: '',
+        requestUrl: '',
+        startPage: '',
+        pageSize: '',
+        tableSequence: ''
       },
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
         update: '修改',
-        create: '新建数据源'
+        create: '新建任务'
       },
       // dialogPvVisible: false,
       // pvData: [],
       rules: {
-        name: [{ required: true, message: '数据源名称不能为空', trigger: 'blur' }],
-        url: [{ required: true, message: '连接地址不能为空', trigger: 'blur' }],
+        tableName: [{ required: true, message: '任务表名不能为空', trigger: 'blur' }],
         // createTime: [{ type: 'date', required: true, message: 'createTime is required', trigger: 'change' }],
-        username: [{ required: true, message: '用户名不能为空', trigger: 'blur' }],
-        password: [{ required: true, message: '密码不能为空', trigger: 'blur' }]
+        dataSource: [{ required: true, message: '数据源不能为空', trigger: 'blur' }],
+        systemId: [{ required: true, message: '任务调用ID不能为空', trigger: 'blur' }],
+        requestUrl: [{ required: true, message: '请求地址不能为空', trigger: 'blur' }],
+        startPage: [{ required: true, message: '开始页数不能为空', trigger: 'blur' }],
+        pageSize: [{ required: true, message: '每页数据量不能为空', trigger: 'blur' }]
       },
       downloadLoading: false
     }
@@ -319,15 +372,23 @@ export default {
     resetTemp() {
       this.temp = {
         id: undefined,
-        createTime: new Date(),
-        name: '',
-        dbType: 'Mysql',
+        tableName: '',
+        taskType: 0,
+        taskState: 4,
+        dataSource:'',
         creator:this.$store.getters.name,
-        driver:'',
-        url:'',
-        username:'',
-        password:'',
-        connState: 'undo'
+        createTime: new Date(),
+        updateTime: new Date(),
+        totalFromSource: 0,
+        totalInLocal: 0,
+        timestampField: '',
+        updateTimestampValue: '',
+        timeInterval: 0,
+        systemId: '',
+        requestUrl: '',
+        startPage: 1,
+        pageSize: 1000,
+        tableSequence: 0
       }
     },
     handleCreate() {
